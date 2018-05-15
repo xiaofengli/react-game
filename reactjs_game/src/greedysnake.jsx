@@ -41,6 +41,7 @@ class Board extends React.Component {
       currentTailPos: 0,
       snakeLength: 3,
       keyboardDirection: 'RIGHT',
+      tails: Array(0).fill(null)
     };
 
   }
@@ -52,7 +53,7 @@ class Board extends React.Component {
 
     // Generate a position is where the snake head is
     const headPosition = this.generateRandomPosition();
-
+    const tails=[...this.state.tails];
     let foodPosition = this.generateRandomPosition();
     while (foodPosition === headPosition) {
       foodPosition = this.generateRandomPosition();
@@ -69,16 +70,23 @@ class Board extends React.Component {
         // use headIndex-1 for the second node
 
         const curTailPos = headPosition-2;
-        squares[headPosition-1] = 'X';
-        squares[headPosition-2] = 'X';
+        
         squares[foodPosition] = '*';
+        tails.unshift(headPosition-1);
+        tails.unshift(headPosition-2);
 
+        //update tail to be shown on the grid
+        var i;
+        for (i = 0; i < tails.length; i++) { 
+          squares[tails[i]]="X";  
+        }
         this.setState(
           {
             squares: squares,
             currentHeadPos:headPosition,
             currentTailPos:curTailPos,
             foodPos: foodPosition,
+            tails:tails,
           }
         );
     }
@@ -96,6 +104,7 @@ class Board extends React.Component {
              this.drawSquare(headPosition);
              */
              this.moveSnake();
+             
              console.log("repeating this");
            })
 
@@ -111,24 +120,95 @@ class Board extends React.Component {
   moveSnake() {
     // TODO there is a bug here, if the currentPosition is the end of the row
     // then make the head should appear in the front of offset length
+    
+    var newHeadPos=0;
+    const newStateArr = Array(400).fill(null);
+    const tails=[...this.state.tails];
+    var tailpos=0;
+    //move snake depend on 
+    switch (this.state.keyboardDirection) {
+      case "RIGHT": {
+        // code for "down arrow" key press.
 
-    const newHeadPos = this.state.currentHeadPos+1;
-    const newStateArr = [...this.state.squares];
 
-    // Clear the tail, and draw the new head
+        
+        newHeadPos = this.state.currentHeadPos+1;
+        
+        break;
+      }
+      case "UP": {
+        // code for "up arrow" key press.
+        
+        newHeadPos = this.state.currentHeadPos-20;
+        break;
+      }
+      case "DOWN": {
+        // code for "left arrow" key press.
+        
+        newHeadPos = this.state.currentHeadPos+20;
+        break;
+      }
+      case "LEFT":{
+        // code for "right arrow" key press.
+        newHeadPos = this.state.currentHeadPos-1;
+        break;
+      }
+      default:
+      return; // Quit when this doesn't handle the key event.
+    }
+    
 
+  
+    var i;
+    
+    //move tail
+    for (i = 0; i < tails.length; i++) { 
+
+
+
+
+      if (i!=tails.length-1){
+        if(i==0){
+          tailpos=tails[0];
+        }
+        tails[i]=tails[i+1];
+        if(tails[i]==newHeadPos){
+          alert("loss")
+        }
+      }
+      else{
+        tails[i]=this.state.currentHeadPos;
+        if(tails[i]==newHeadPos){
+          alert("loss")
+        }
+      }
+    }
+
+    //check eat food 
+    var newfoodpos=this.state.foodPos;
+    if(tailpos==this.state.foodPos){
+      tails.unshift(tailpos)
+      newfoodpos=this.generateRandomPosition();
+    }
+
+    newStateArr[newfoodpos] = '*'
+    
     newStateArr[newHeadPos] = 'O';
-    newStateArr[this.state.currentTailPos] = '';
-    const currentTailPos = this.state.currentTailPos+1;
+    
+    
 
-    newStateArr[currentTailPos] = 'X';
-    newStateArr[currentTailPos+1] = 'X'; // TODO this logic needs to be changed when size is growing
+    //update tail to be shown on the grid
+    for (i = 0; i < tails.length; i++) { 
+      newStateArr[tails[i]]="X";  
+    }
 
     this.setState(
       {
         squares : newStateArr,
         currentHeadPos: newHeadPos,
-        currentTailPos: currentTailPos,
+        tails:tails,
+        foodPos:newfoodpos,
+        
       }
     );
   }
@@ -223,6 +303,8 @@ class Board extends React.Component {
 
   // Controll keyboard for four direction key, don't do anything for other keys
   registerKeyboard() {
+    var Direction=this.state.keyboardDirection;
+    
     window.addEventListener("keydown", function (event) {
       if (event.defaultPrevented) {
         return; // Do nothing if the event was already processed
@@ -231,30 +313,76 @@ class Board extends React.Component {
       switch (event.key) {
         case "ArrowDown": {
           // code for "down arrow" key press.
-          alert('arrow down button is pressed');
+          //alert('arrow down button is pressed');
+          if(Direction=="UP"){
+            break;
+          }
+          Direction='DOWN';
+          this.setState(
+            {
+              keyboardDirection:Direction,
+            }
+          );
+          
           break;
         }
         case "ArrowUp": {
           // code for "up arrow" key press.
-          alert('arrow up button is pressed');
+          //alert('arrow up button is pressed');
+          if(Direction=="DOWN"){
+            break;
+          }
+          Direction='UP';
+          this.setState(
+            {
+              keyboardDirection:Direction,
+            }
+          );
+          
           break;
         }
         case "ArrowLeft": {
           // code for "left arrow" key press.
-          alert('arrow left button is pressed');
+          //alert('arrow left button is pressed');
+          if(Direction=="RIGHT"){
+            break;
+          }
+          Direction='LEFT';
+          this.setState(
+            {
+              keyboardDirection:Direction,
+            }
+          );
+          
           break;
         }
         case "ArrowRight":{
           // code for "right arrow" key press.
-          alert('arrow right button is pressed');
+          //alert('arrow right button is pressed');
+          if(Direction=="LEFT"){
+            break;
+          }
+          Direction='RIGHT'
+          this.setState(
+            {
+              keyboardDirection:Direction,
+            }
+          );
+          
           break;
         }
         default:
+
         return; // Quit when this doesn't handle the key event.
       }
+      
       // Cancel the default action to avoid it being handled twice
       event.preventDefault();
-    }, true);
+    }.bind(this), true);
+
+    
+    
+    
     // the last option dispatches the event to the listener first,
     // then dispatches event to window
   } // end of registerKeyboard
