@@ -41,7 +41,8 @@ class Board extends React.Component {
       currentTailPos: 0,
       snakeLength: 3,
       keyboardDirection: 'RIGHT',
-      tails: Array(0).fill(null)
+      tails: Array(0).fill(null),
+      foodPositionbuffer:0,
     };
 
   }
@@ -86,6 +87,7 @@ class Board extends React.Component {
             currentHeadPos:headPosition,
             currentTailPos:curTailPos,
             foodPos: foodPosition,
+            foodPositionbuffer:foodPosition,
             tails:tails,
           }
         );
@@ -108,7 +110,7 @@ class Board extends React.Component {
              console.log("repeating this");
            })
 
-    , 2000);
+    , 1000);
 
 	  gameOver = false; //restart the game, to avoid the message.
   }
@@ -125,11 +127,19 @@ class Board extends React.Component {
     const newStateArr = Array(400).fill(null);
     const tails=[...this.state.tails];
     var tailpos=0;
+    var oldfood=this.state.foodPositionbuffer;
+
+    var curhead=this.state.currentHeadPos;
+
+    var row=Math.floor(curhead/20);
+    var column=curhead%20;
     //move snake depend on 
     switch (this.state.keyboardDirection) {
       case "RIGHT": {
         // code for "down arrow" key press.
-
+        if(column==19){
+          alert("loss");
+        }
 
         
         newHeadPos = this.state.currentHeadPos+1;
@@ -138,18 +148,25 @@ class Board extends React.Component {
       }
       case "UP": {
         // code for "up arrow" key press.
-        
+        if(row==0){
+          alert("loss");
+        }
         newHeadPos = this.state.currentHeadPos-20;
         break;
       }
       case "DOWN": {
         // code for "left arrow" key press.
-        
+        if(row==19){
+          alert("loss");
+        }
         newHeadPos = this.state.currentHeadPos+20;
         break;
       }
       case "LEFT":{
         // code for "right arrow" key press.
+        if(column==0){
+          alert("loss");
+        }
         newHeadPos = this.state.currentHeadPos-1;
         break;
       }
@@ -185,9 +202,14 @@ class Board extends React.Component {
     }
 
     //check eat food 
+    
     var newfoodpos=this.state.foodPos;
-    if(tailpos==this.state.foodPos){
-      tails.unshift(tailpos)
+    if(tailpos==this.state.foodPositionbuffer){
+      tails.unshift(tailpos);
+      oldfood=this.state.foodPos;
+    }
+    if(newfoodpos==newHeadPos){
+      oldfood=newfoodpos;
       newfoodpos=this.generateRandomPosition();
     }
 
@@ -201,13 +223,16 @@ class Board extends React.Component {
     for (i = 0; i < tails.length; i++) { 
       newStateArr[tails[i]]="X";  
     }
-
+    while(newfoodpos!=this.state.foodPos && newStateArr[newfoodpos]!='*'){
+      newfoodpos=this.generateRandomPosition();
+    }
     this.setState(
       {
         squares : newStateArr,
         currentHeadPos: newHeadPos,
         tails:tails,
         foodPos:newfoodpos,
+        foodPositionbuffer:oldfood,
         
       }
     );
